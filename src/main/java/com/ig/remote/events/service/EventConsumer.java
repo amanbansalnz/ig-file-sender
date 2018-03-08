@@ -18,11 +18,11 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 
 @Component
-public class EventConsumer implements MessageListener{
+public class EventConsumer implements MessageListener {
 
     private final Logger LOGGER = LoggerFactory.getLogger(EventConsumer.class);
-    private MessageConverter jacksonJmsMessageConverter;
     private final int NUMBER_OF_MAX_TOPIC_CONSUMERS = 2;
+    private MessageConverter jacksonJmsMessageConverter;
     private int numberOfTopicConsumers = 0;
     private int numberOfQueueConsumers = 0;
 
@@ -33,16 +33,16 @@ public class EventConsumer implements MessageListener{
     @Override
     public void onMessage(Message message) {
         try {
-            Order order = (Order)jacksonJmsMessageConverter.fromMessage(message);
+            Order order = (Order) jacksonJmsMessageConverter.fromMessage(message);
             LOGGER.info("Message received >>> {} ", order.toString());
         } catch (JMSException e) {
             e.printStackTrace();
         }
     }
 
-    public void createConsumer(JmsTemplate jmsTemplate, String queue){
+    public void createConsumer(JmsTemplate jmsTemplate, String queue) {
         try {
-            if(numberOfQueueConsumers<1) {
+            if (numberOfQueueConsumers < 1) {
                 ConnectionFactory connectionFactory = jmsTemplate.getConnectionFactory();
                 Connection connection = connectionFactory.createConnection();
                 Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -50,7 +50,7 @@ public class EventConsumer implements MessageListener{
                 MessageConsumer consumer = session.createConsumer(session.createQueue(queue));
                 consumer.setMessageListener(this);
                 connection.start();
-
+                numberOfQueueConsumers++;
             }
         } catch (JMSException e) {
             e.printStackTrace();
@@ -62,11 +62,10 @@ public class EventConsumer implements MessageListener{
             Connection connection = jmsTemplate.getConnectionFactory().createConnection();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            while(numberOfTopicConsumers <= NUMBER_OF_MAX_TOPIC_CONSUMERS) {
+            while (numberOfTopicConsumers < NUMBER_OF_MAX_TOPIC_CONSUMERS) {
                 session.createConsumer(session.createTopic(queue)).setMessageListener(this);
-                numberOfTopicConsumers+=2;
+                numberOfTopicConsumers++;
             }
-
             connection.start();
 
         } catch (JMSException e) {

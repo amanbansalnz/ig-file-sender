@@ -3,19 +3,10 @@ package com.ig.remote.events.service;
 import com.ig.core.model.ActivemqConfiguration;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.function.Consumer;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.Session;
 
 @Service
 public class EventService {
@@ -39,10 +30,10 @@ public class EventService {
         eventProducer.setQueue(queue);
         eventProducer.setJmsTemplate(jmsTemplate);
 
-        if(activemqConfiguration.isQueue()){
+        if (activemqConfiguration.isQueue()) {
             eventConsumer.createConsumer(jmsTemplate, queue);
-        }else{
-            jmsTemplate.setPubSubDomain(activemqConfiguration.isQueue());
+        } else {
+            jmsTemplate.setPubSubDomain(true);
             eventConsumer.createConsumers(jmsTemplate, queue);
         }
     }
