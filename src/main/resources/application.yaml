@@ -1,0 +1,10 @@
+server:
+  contextPath: /ig-messaging-api
+  port: 9090
+  ssl:
+    enabled: false
+
+logging:
+  pattern:
+    console: "%-30(%d{HH:mm:ss.SSS} [%thread]) %-5level %logger{32} - %msg%n"
+  level:
