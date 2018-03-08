@@ -29,12 +29,15 @@ public class EventServiceTest {
     private EventProducer mockEventProducer;
 
     @Mock
+    private EventConsumer mockEventConsumer;
+
+    @Mock
     private Logger mockLogger;
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        service = new EventService(mockJmsTemplate, mockEventProducer);
+        service = new EventService(mockJmsTemplate, mockEventProducer, mockEventConsumer);
     }
 
     @Test
