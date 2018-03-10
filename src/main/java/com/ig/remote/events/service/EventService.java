@@ -5,7 +5,9 @@ import com.ig.core.model.ActivemqConfiguration;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,44 +15,44 @@ public class EventService {
 
     private static Logger LOGGER = LoggerFactory.getLogger(EventService.class);
 
-    private final JmsTemplate jmsTemplate;
     private EventProducer eventProducer;
     private EventConsumer eventConsumer;
 
-    public EventService(JmsTemplate jmsTemplate, EventProducer eventProducer, EventConsumer eventConsumer) {
-        this.jmsTemplate = jmsTemplate;
+    @Autowired
+    private MessageConverter jacksonJmsMessageConverter;
+
+    public EventService(EventProducer eventProducer, EventConsumer eventConsumer) {
         this.eventProducer = eventProducer;
         this.eventConsumer = eventConsumer;
     }
 
-    public void setupEventConfiguration(ActivemqConfiguration activemqConfiguration) {
+    public JmsTemplate setupEventConfiguration(ActivemqConfiguration activemqConfiguration, boolean isQueue) {
         LOGGER.info("setting up event configuration");
-        setUpJmsTemplate(activemqConfiguration);
         String queue = activemqConfiguration.getDestinationName();
-        eventProducer.setQueue(queue);
-        eventProducer.setJmsTemplate(jmsTemplate);
+        JmsTemplate jmsTemplate = setUpJmsTemplate(activemqConfiguration);
 
-        if (activemqConfiguration.isQueue()) {
-            eventConsumer.createConsumer(jmsTemplate, queue);
-        } else {
+        if(isQueue) {
+            eventConsumer.createConsumer(jmsTemplate, queue+1);
+        }else{
             jmsTemplate.setPubSubDomain(true);
             eventConsumer.createConsumers(jmsTemplate, queue);
         }
+        return jmsTemplate;
     }
 
-    private void setUpJmsTemplate(ActivemqConfiguration activemqConfiguration) {
+    private JmsTemplate setUpJmsTemplate(ActivemqConfiguration activemqConfiguration) {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();
         connectionFactory.setBrokerURL(activemqConfiguration.getBrokerUrl());
         connectionFactory.setUserName(activemqConfiguration.getUserName());
         connectionFactory.setPassword(activemqConfiguration.getPassword());
-        jmsTemplate.setConnectionFactory(connectionFactory);
+        JmsTemplate jms = new JmsTemplate();
+        jms.setMessageConverter(jacksonJmsMessageConverter);
+        jms.setConnectionFactory(connectionFactory);
+       return jms;
     }
 
     public EventProducer getEventProducer() {
         return eventProducer;
     }
 
-    public JmsTemplate getJmsTemplate() {
-        return jmsTemplate;
-    }
 }

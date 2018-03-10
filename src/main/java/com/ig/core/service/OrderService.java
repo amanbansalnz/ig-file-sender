@@ -10,6 +10,7 @@ import com.ig.web.exception.InvalidResponseException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,13 +46,15 @@ public class OrderService {
         List<String> xmlChildren = readFileContents(file.getOriginalFilename());
         List<Order> orders = new ArrayList<>();
 
-        eventService.setupEventConfiguration(activemqConfiguration);
+        JmsTemplate queue = eventService.setupEventConfiguration(activemqConfiguration, true);
+        JmsTemplate topic = eventService.setupEventConfiguration(activemqConfiguration, false);
 
         for (int i = 1; i < xmlChildren.size(); i++) {
             try {
                 Order order = (Order) xmlParser.unmarshal(xmlChildren.get(i), Order.class);
                 if (order != null) {
-                    eventService.getEventProducer().sendMessage(order);
+                    eventService.getEventProducer().sendMessage(topic, order,activemqConfiguration.getDestinationName());
+                    eventService.getEventProducer().sendMessage(queue,order,activemqConfiguration.getDestinationName()+1);
                     LOGGER.debug("Order {} processed", order.toString());
                     orders.add(order);
                 }

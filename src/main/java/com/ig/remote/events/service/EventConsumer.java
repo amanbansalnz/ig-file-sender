@@ -3,6 +3,7 @@ package com.ig.remote.events.service;
 
 import com.ig.core.model.Order;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.JmsTemplate;
@@ -15,6 +16,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.QueueConnectionFactory;
 import javax.jms.Session;
 
 @Component
